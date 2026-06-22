@@ -4,7 +4,7 @@ import axios from "axios";
 //   baseURL: "http://localhost:8000",
 // });
 const API = axios.create({
-  baseURL: "https://rastaflow.onrender.com",
+  baseURL: "https://rastaflow-1.onrender.com",
 });
 
 export const predictPriority = (data: any) =>
