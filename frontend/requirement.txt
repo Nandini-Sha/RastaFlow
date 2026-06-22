@@ -1,0 +1,11 @@
+react
+react-dom
+typescript
+vite
+axios
+tailwindcss
+react-router-dom
+recharts
+leaflet
+react-leaflet
+lucide-react
