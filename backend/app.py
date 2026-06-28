@@ -35,6 +35,9 @@ class EventRequest(BaseModel):
     month: int | None = None
 
 
+@app.get("/health")
+def health():
+    return {"status": "healthy"}    
 # -----------------------
 # HOME ROUTE
 # -----------------------

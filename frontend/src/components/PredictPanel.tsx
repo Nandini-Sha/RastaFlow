@@ -80,38 +80,35 @@ export default function PredictPanel() {
   // -------------------------
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center gap-6 p-6">
-      {/* <div className="hidden lg:block w-[500px] h-[800px] bg-white border border-gray-200 shadow-lg rounded-2xl overflow-hidden">
-        
-        <iframe
-          src="/traffic_hotspots.html"
-          title="Traffic Hotspots"
-          className="w-full h-full border-0"
-        />
-      </div> */}
       <div className="hidden lg:block">
-  <div className="bg-white border border-gray-200 shadow-xl rounded-2xl p-4">
-    
-    <div className="mb-3">
-      <h2 className="text-xl font-bold text-yellow-600">
-        Historical Incident Hotspots
-      </h2>
+  {/* <div className="bg-white border border-gray-200 shadow-xl rounded-2xl p-4"> */}
+        {/* <div className="w-full max-w-lg h-[650px] bg-white border border-gray-200 shadow-lg rounded-2xl p-6 overflow-y-auto"> */}
+        <div className="w-[850px] h-[650px] bg-white border border-gray-200 shadow-lg rounded-2xl p-6 overflow-y-auto">
+          
+          <div className="mb-3">
+            <h2 className="text-xl font-bold text-yellow-600">
+              Historical Incident Hotspots
+            </h2>
 
-      <p className="text-sm text-gray-500">
-        Historical traffic event density map
-      </p>
-    </div>
+            <p className="text-sm text-gray-500">
+              Historical traffic event density map
+            </p>
+          </div>
 
-    <div className="w-[800px] h-[500px] rounded-xl overflow-hidden border">
-      <iframe
-        src="/traffic_hotspots.html"
-        title="Traffic Hotspots"
-        className="w-full h-full border-0"
-      />
-    </div>
+          <div className="w-[800px] h-[500px] rounded-xl overflow-hidden border">
+            <iframe
+              src="/traffic_hotspots.html"
+              title="Traffic Hotspots"
+              className="w-full h-full border-0"
+            />
+          </div>
 
-  </div>
-</div>
-      <div className="w-full h-[500] max-w-lg bg-white border border-gray-200 shadow-lg rounded-2xl p-6">
+        </div>
+      </div>
+      {/* <div className="w-full h-[500] max-w-lg bg-white border border-gray-200 shadow-lg rounded-2xl p-6"> */}
+      {/* <div className="w-full max-w-lg bg-white border border-gray-200 shadow-lg rounded-2xl p-6"> */}
+      {/* <div className="w-full max-w-lg h-[600px] bg-white border border-gray-200 shadow-lg rounded-2xl p-6 overflow-y-auto"> */}
+      <div className="w-full max-w-lg h-[650px] bg-white border border-gray-200 shadow-lg rounded-2xl p-6 overflow-y-auto">
 
         {/* TITLE */}
         <h1 className="text-3xl font-bold text-yellow-500 text-center mb-6">
