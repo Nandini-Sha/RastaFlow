@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Response
+
+import logging
 from datetime import datetime
 
 from predictor import predict_event
@@ -35,12 +38,14 @@ class EventRequest(BaseModel):
     month: int | None = None
 
 
-from fastapi import Response
+
+
+logger = logging.getLogger(__name__)
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 async def health():
-    return {"status": "healthy"}  
-# -----------------------
+    logger.info(f"Health check received at {datetime.now()}")
+    return {"status": "healthy"}
 # HOME ROUTE
 # -----------------------
 @app.get("/")
