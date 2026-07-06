@@ -35,9 +35,11 @@ class EventRequest(BaseModel):
     month: int | None = None
 
 
-@app.get("/health")
-def health():
-    return {"status": "healthy"}    
+from fastapi import Response
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health():
+    return {"status": "healthy"}  
 # -----------------------
 # HOME ROUTE
 # -----------------------
