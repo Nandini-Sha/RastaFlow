@@ -184,11 +184,7 @@ export default function IncidentManagement() {
                       <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${getSeverityColor(incident.severity)}`}>
                         {incident.severity.toUpperCase()}
                       </span>
-                      {incident.image_url && !isOfficial && (
-                        <span className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-800">
-                          <Camera className="w-3 h-3" /> Photo Attached
-                        </span>
-                      )}
+
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center text-gray-500 dark:text-gray-400 text-sm">
@@ -222,8 +218,8 @@ export default function IncidentManagement() {
                     )}
                   </div>
 
-                  {/* ONLY SHOW FULL DETAILS TO OFFICIALS */}
-                  {isOfficial && (incident.description || incident.image_url) && (
+                  {/* SHOW FULL DETAILS TO EVERYONE */}
+                  {(incident.description || incident.image_url) && (
                     <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50 space-y-4">
                       {incident.description && (
                         <div className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-300">
