@@ -15,7 +15,7 @@ export default function IncidentManagement() {
 
   const fetchIncidents = async () => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
       const response = await axios.get(`${API_URL}/incidents`);
       const data = response.data;
       setActiveIncidents(data.filter((inc: any) => inc.status === "Active"));
@@ -43,7 +43,7 @@ export default function IncidentManagement() {
     if (!window.confirm("Are you sure you want to permanently delete this incident?")) return;
     
     try {
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
       await axios.delete(`${API_URL}/incidents/${id}`);
       fetchIncidents(); // Refresh the lists
     } catch (error) {
@@ -107,8 +107,8 @@ export default function IncidentManagement() {
         </div>
       )}
 
-      <div className="p-6 space-y-8 animate-in fade-in duration-500">
-        <div className="flex items-center justify-between">
+      <div className="p-4 md:p-6 pb-24 md:pb-6 space-y-6 md:space-y-8 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <Activity className="w-8 h-8 text-yellow-500" />

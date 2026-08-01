@@ -76,7 +76,7 @@ export default function StrategicInsights() {
   useEffect(() => {
     const fetchIncidents = async () => {
       try {
-        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+        const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
         const response = await axios.get(`${API_URL}/incidents`);
         setLiveIncidents(response.data);
       } catch (error) {
@@ -176,7 +176,7 @@ export default function StrategicInsights() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 pb-24 md:pb-8 relative">
       
       {/* HEADER & FILTERS */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">

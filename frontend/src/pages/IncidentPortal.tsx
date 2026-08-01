@@ -62,7 +62,7 @@ export default function IncidentPortal() {
         data.append("image", image);
       }
 
-      const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
       await axios.post(`${API_URL}/report-incident`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
@@ -83,7 +83,7 @@ export default function IncidentPortal() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-6 md:py-8 pb-24 md:pb-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
           <Camera className="w-8 h-8 text-blue-500" />
@@ -223,7 +223,6 @@ export default function IncidentPortal() {
                   ref={fileInputRef}
                   onChange={handleImageChange}
                   accept="image/*"
-                  capture="environment"
                   className="hidden"
                 />
 
