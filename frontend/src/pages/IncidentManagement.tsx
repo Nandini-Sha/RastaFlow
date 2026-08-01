@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { AlertTriangle, Clock, MapPin, CheckCircle, Activity, ChevronRight, Camera, FileText, X, Trash2, Filter } from "lucide-react";
+import { AlertTriangle, Clock, MapPin, CheckCircle, Activity, ChevronRight, FileText, X, Trash2, Filter } from "lucide-react";
 
 export default function IncidentManagement() {
   const [activeIncidents, setActiveIncidents] = useState<any[]>([]);
