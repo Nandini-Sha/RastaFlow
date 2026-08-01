@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Moon, Sun, Menu, X, CarFront, AlertTriangle, FileText, BarChart3, Activity } from "lucide-react";
+import { Moon, Sun, Menu, X, CarFront, AlertTriangle, BarChart3, Activity } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { useState } from "react";
 
