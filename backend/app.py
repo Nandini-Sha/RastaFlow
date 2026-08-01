@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Response
@@ -96,6 +96,7 @@ async def delete_incident(id: str):
 
 @app.post("/report-incident")
 async def report_incident(
+    request: Request,
     type: str = Form(...),
     location: str = Form(...),
     description: str = Form(...),
@@ -111,7 +112,7 @@ async def report_incident(
         with open(file_path, "wb") as f:
             f.write(await image.read())
         
-        image_url = f"http://localhost:8000/uploads/{new_filename}"
+        image_url = f"{request.base_url}uploads/{new_filename}"
 
     incident_data = {
         "incident_id": f"INC-{str(uuid.uuid4().int)[:4]}",
