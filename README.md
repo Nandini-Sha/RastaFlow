@@ -2,6 +2,8 @@
 
 An AI-powered traffic management platform that predicts incident severity, estimates clearance time, visualizes congestion hotspots, and recommends diversion routes to improve urban traffic flow.
 
+**🌍 Live Demo:** [https://rasta-flow.vercel.app](https://rasta-flow.vercel.app)
+  
 ---
 
 ## 🔧 Tech Stack
@@ -168,13 +170,6 @@ A quick visual walkthrough of the **RastaFlow AI** platform showcasing traffic a
 **Team RastaFlow AI**
 
 * **Nandini Bhardwaj** – GitHub: https://github.com/Nandini-Sha
-
----
-
-## 🌐 Project Links
-
-* GitHub Repository: https:https://github.com/Nandini-Sha/JobMosaic-job-platform.git
-* Live Demo: https:https://rasta-flow.vercel.app/
 
 ---
 
