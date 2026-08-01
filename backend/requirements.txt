@@ -7,3 +7,5 @@ catboost
 joblib
 python-multipart
 pydantic
+motor
+python-dotenv
