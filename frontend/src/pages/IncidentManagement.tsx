@@ -52,6 +52,20 @@ export default function IncidentManagement() {
     }
   };
 
+  const handleResolve = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Don't trigger the card click!
+    if (!window.confirm("Mark this incident as resolved?")) return;
+    
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
+      await axios.patch(`${API_URL}/incidents/${id}/resolve`);
+      fetchIncidents(); // Refresh the lists
+    } catch (error) {
+      console.error("Error resolving incident:", error);
+      alert("Failed to resolve incident.");
+    }
+  };
+
   const getSeverityColor = (severity: string) => {
     switch (severity.toLowerCase()) {
       case "critical": return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800";
@@ -195,13 +209,22 @@ export default function IncidentManagement() {
                         <Clock className="w-4 h-4 mr-1" /> {incident.time}
                       </div>
                       {isOfficial && (
-                        <button 
-                          onClick={(e) => handleDelete(e, incident.id)}
-                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors opacity-0 group-hover:opacity-100"
-                          title="Delete Incident"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={(e) => handleResolve(e, incident.id)}
+                            className="p-1.5 text-gray-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors"
+                            title="Mark as Resolved"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={(e) => handleDelete(e, incident.id)}
+                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+                            title="Delete Incident"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

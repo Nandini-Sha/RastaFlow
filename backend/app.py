@@ -97,6 +97,16 @@ async def delete_incident(id: str):
         return {"message": "Incident deleted successfully"}
     return {"message": "Incident not found"}
 
+@app.patch("/incidents/{id}/resolve")
+async def resolve_incident(id: str):
+    result = await incident_collection.update_one(
+        {"_id": ObjectId(id)},
+        {"$set": {"status": "Resolved"}}
+    )
+    if result.modified_count == 1:
+        return {"message": "Incident marked as Resolved"}
+    return {"message": "Incident not found or already resolved"}
+
 @app.post("/report-incident")
 async def report_incident(
     request: Request,
