@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Moon, Sun, Menu, X, CarFront, AlertTriangle, BarChart3, Activity } from "lucide-react";
+import { Moon, Sun, Menu, X, CarFront, AlertTriangle, BarChart3, Activity, LogOut } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 import { useState } from "react";
 
@@ -110,8 +110,9 @@ export default function Navbar() {
                   localStorage.removeItem("isOfficial");
                   window.location.href = "/";
                 }}
-                className="flex w-full items-center pl-3 pr-4 py-2 text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                className="flex w-full items-center pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 dark:hover:border-red-800"
               >
+                <LogOut className="w-5 h-5 mr-2" />
                 Logout Official
               </button>
             )}
