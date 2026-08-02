@@ -17,6 +17,7 @@ def incident_helper(incident) -> dict:
         "incident_id": incident.get("incident_id", "INC-000"),
         "type": incident.get("type", ""),
         "location": incident.get("location", ""),
+        "description": incident.get("description", ""),
         "severity": incident.get("severity", ""),
         "time": incident.get("time", ""),
         "status": incident.get("status", "Active"),

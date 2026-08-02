@@ -71,6 +71,7 @@ class IncidentModel(BaseModel):
     incident_id: str
     type: str
     location: str
+    description: str | None = None
     severity: str
     time: str
     status: str
