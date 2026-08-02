@@ -165,12 +165,14 @@ A quick visual walkthrough of the **RastaFlow AI** platform showcasing our new m
 | ![Insights 1](./screenshots/Insights1.png) | ![Insights 2](./screenshots/Insights2.png) | ![Insights 3](./screenshots/Insights3.png) |
 
 ### 🛣️ AI Prediction Results
-| Prediction Insight 1 | Prediction Insight 2 | Prediction Insight 3 |
-| :---: | :---: | :---: |
-| ![Results 1](./screenshots/Results1.png) | ![Results 2](./screenshots/Results2.png) | ![Results 3](./screenshots/Results3.png) |
+| Prediction Insight |
+| :---: |
+| ![Results 1](./screenshots/Results1.png) |
+| ![Results 2](./screenshots/Results2.png) |
+| ![Results 3](./screenshots/Results3.png) |
 
 ### 🌙 Themes
-| Dark Mode UI |
+| Dark Mode UI for Dark mode Lovers|
 | :---: |
 | ![Dark Theme](./screenshots/Dark_Theme.png) |
 
