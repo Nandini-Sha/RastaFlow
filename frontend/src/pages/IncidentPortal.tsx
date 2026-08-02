@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import axios from "axios";
-import { Camera, MapPin, AlertTriangle, Send, CheckCircle, UploadCloud, X, Edit3 } from "lucide-react";
+import { Camera, MapPin, AlertTriangle, Send, CheckCircle, UploadCloud, X, Edit3, Image as ImageIcon } from "lucide-react";
 
 export default function IncidentPortal() {
   const [formData, setFormData] = useState({
@@ -15,7 +15,8 @@ export default function IncidentPortal() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const incidentTypes = [
     "Vehicle Breakdown", "Tree Fall", "Accident", "Public Event",
@@ -216,11 +217,20 @@ export default function IncidentPortal() {
                 Photo Evidence (Optional)
               </label>
               
-              <div className="flex-1 relative rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex flex-col items-center justify-center min-h-[200px] overflow-hidden group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+              <div className="flex-1 relative rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex flex-col items-center justify-center min-h-[200px] overflow-hidden group">
                 
                 <input
                   type="file"
-                  ref={fileInputRef}
+                  ref={cameraInputRef}
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                />
+                
+                <input
+                  type="file"
+                  ref={galleryInputRef}
                   onChange={handleImageChange}
                   accept="image/*"
                   className="hidden"
@@ -229,10 +239,13 @@ export default function IncidentPortal() {
                 {previewUrl ? (
                   <div className="absolute inset-0 w-full h-full">
                     <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                      <p className="text-white font-medium flex items-center gap-2">
-                        <UploadCloud className="w-5 h-5" /> Change Photo
-                      </p>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2 items-center justify-center backdrop-blur-sm">
+                      <button type="button" onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }} className="px-4 py-2 bg-white/20 hover:bg-white/40 text-white rounded-lg flex items-center gap-2 transition-colors">
+                        <Camera className="w-4 h-4" /> Retake Photo
+                      </button>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }} className="px-4 py-2 bg-white/20 hover:bg-white/40 text-white rounded-lg flex items-center gap-2 transition-colors">
+                        <ImageIcon className="w-4 h-4" /> Pick New
+                      </button>
                     </div>
                     <button
                       type="button"
@@ -243,14 +256,27 @@ export default function IncidentPortal() {
                     </button>
                   </div>
                 ) : (
-                  <div className="text-center p-6 pointer-events-none">
-                    <UploadCloud className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-3 group-hover:text-blue-500 transition-colors" />
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Click to upload a photo
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      PNG, JPG up to 5MB
-                    </p>
+                  <div className="flex flex-col items-center justify-center gap-4 w-full p-4">
+                    <p className="text-sm font-medium text-gray-500 dark:text-gray-400">How would you like to upload?</p>
+                    <div className="flex gap-4 w-full justify-center">
+                      <button 
+                        type="button" 
+                        onClick={() => cameraInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-500 transition-colors w-28"
+                      >
+                        <Camera className="w-8 h-8" />
+                        <span className="text-sm font-medium">Camera</span>
+                      </button>
+                      
+                      <button 
+                        type="button" 
+                        onClick={() => galleryInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-500 transition-colors w-28"
+                      >
+                        <ImageIcon className="w-8 h-8" />
+                        <span className="text-sm font-medium">Gallery</span>
+                      </button>
+                    </div>
                     <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-2 font-medium bg-yellow-50 dark:bg-yellow-900/20 py-1 px-2 rounded-md inline-block">
                       Note: Please upload a landscape image or tilt your camera to click image.
                     </p>
