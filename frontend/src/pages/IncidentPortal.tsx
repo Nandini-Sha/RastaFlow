@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import axios from "axios";
-import { Camera, MapPin, AlertTriangle, Send, CheckCircle, UploadCloud, X, Edit3, Image as ImageIcon } from "lucide-react";
+import { Camera, MapPin, AlertTriangle, Send, CheckCircle, X, Edit3, Image as ImageIcon } from "lucide-react";
 
 export default function IncidentPortal() {
   const [formData, setFormData] = useState({
@@ -44,7 +44,8 @@ export default function IncidentPortal() {
   const removeImage = () => {
     setImage(null);
     setPreviewUrl(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    if (cameraInputRef.current) cameraInputRef.current.value = "";
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
