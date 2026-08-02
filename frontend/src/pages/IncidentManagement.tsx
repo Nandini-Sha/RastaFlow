@@ -133,8 +133,8 @@ export default function IncidentManagement() {
             </p>
           </div>
           
-          <div className="flex gap-4">
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4 flex-1">
               <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg">
                 <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
@@ -143,7 +143,7 @@ export default function IncidentManagement() {
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{activeIncidents.filter(inc => inc.severity.toLowerCase() === 'critical').length}</p>
               </div>
             </div>
-            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4">
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex items-center gap-4 flex-1">
               <div className="bg-yellow-100 dark:bg-yellow-900/30 p-2 rounded-lg">
                 <Activity className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
               </div>

@@ -103,6 +103,18 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
+            
+            {localStorage.getItem("isOfficial") === "true" && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("isOfficial");
+                  window.location.href = "/";
+                }}
+                className="flex w-full items-center pl-3 pr-4 py-2 text-base font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                Logout Official
+              </button>
+            )}
           </div>
         </div>
       )}

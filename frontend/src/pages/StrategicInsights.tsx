@@ -201,7 +201,7 @@ export default function StrategicInsights() {
           </p>
         </div>
 
-        <div className="flex items-center gap-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="flex flex-wrap items-center gap-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm w-full md:w-auto">
           <div className="flex items-center gap-2 pl-2">
             <Filter className="w-4 h-4 text-gray-500" />
           </div>
