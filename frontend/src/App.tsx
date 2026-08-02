@@ -29,7 +29,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="rastaflow-theme">
+    <ThemeProvider defaultTheme="light" storageKey="rastaflow-theme-v2">
       <Router>
         <div className="min-h-screen bg-gray-50 dark:bg-[#0a0f1c] text-gray-900 dark:text-gray-100 transition-colors duration-300 relative overflow-hidden">
           {/* Cyber/Tech Grid Background */}
