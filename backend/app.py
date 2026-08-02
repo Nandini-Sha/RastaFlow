@@ -8,6 +8,8 @@ import os
 import logging
 from datetime import datetime
 from bson import ObjectId
+import httpx
+import base64
 
 from predictor import predict_event
 from database import incident_collection, incident_helper
@@ -104,22 +106,54 @@ async def report_incident(
 ):
     image_url = None
     if image:
-        # Save image to uploads folder
-        file_ext = image.filename.split(".")[-1]
-        new_filename = f"{uuid.uuid4()}.{file_ext}"
-        file_path = f"uploads/{new_filename}"
-        
-        with open(file_path, "wb") as f:
-            f.write(await image.read())
-        
-        image_url = f"{request.base_url}uploads/{new_filename}"
+        # Upload image to ImgBB
+        imgbb_api_key = os.getenv("IMGBB_API_KEY")
+        if imgbb_api_key:
+            image_data = await image.read()
+            encoded_image = base64.b64encode(image_data).decode('utf-8')
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.imgbb.com/1/upload",
+                    data={
+                        "key": imgbb_api_key,
+                        "image": encoded_image
+                    },
+                    timeout=15.0
+                )
+                if response.status_code == 200:
+                    image_url = response.json()["data"]["url"]
+                else:
+                    logging.error(f"ImgBB upload failed: {response.text}")
+        else:
+            logging.error("IMGBB_API_KEY is not set in environment variables.")
+
+    severity = "Medium" # Default fallback
+    try:
+        now = datetime.now()
+        ml_input = {
+            "event_type": type,
+            "event_cause": "unknown",
+            "corridor": location,
+            "veh_type": "others",
+            "requires_road_closure": False,
+            "hour": now.hour,
+            "day_of_week": now.weekday(),
+            "month": now.month
+        }
+        # predict_event is imported at top of file
+        prediction = predict_event(ml_input)
+        if "severity" in prediction:
+            severity = prediction["severity"]
+    except Exception as e:
+        logging.error(f"Failed to predict severity: {e}")
 
     incident_data = {
         "incident_id": f"INC-{str(uuid.uuid4().int)[:4]}",
         "type": type,
         "location": location,
         "description": description,
-        "severity": "Medium", # Default for citizen reports
+        "severity": severity,
         "time": "Just now",
         "status": "Active",
         "image_url": image_url
