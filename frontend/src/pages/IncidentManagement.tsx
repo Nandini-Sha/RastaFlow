@@ -170,7 +170,7 @@ export default function IncidentManagement() {
                   <select 
                     value={currentFilter}
                     onChange={(e) => setCurrentFilter(e.target.value)}
-                    className="bg-transparent text-sm font-medium text-gray-700 dark:text-gray-200 border-none focus:ring-0 cursor-pointer p-0 pr-6"
+                    className="bg-transparent text-sm font-medium text-gray-700 dark:text-gray-200 border-none focus:ring-0 cursor-pointer p-0 pr-6 appearance-none outline-none"
                   >
                     <option value="All">All Severities</option>
                     <option value="Critical">Critical</option>
