@@ -180,7 +180,6 @@ export default function IncidentManagement() {
                   </select>
                 </div>
               </h2>
-              <button className="text-sm text-yellow-600 dark:text-yellow-500 hover:underline font-medium">View Map</button>
             </div>
             
             <div className="p-6 space-y-4">
@@ -283,7 +282,6 @@ export default function IncidentManagement() {
                 <CheckCircle className="w-5 h-5 text-green-500" />
                 Recently Resolved
               </h2>
-              <button className="text-sm text-yellow-600 dark:text-yellow-500 hover:underline font-medium">View All</button>
             </div>
             
             <div className="p-6 space-y-4">
