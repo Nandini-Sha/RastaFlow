@@ -160,9 +160,11 @@ A quick visual walkthrough of the **RastaFlow AI** platform showcasing our new m
 | ![Operation Center](./screenshots/Operation_Center.png) |
 
 ### 📈 Strategic Insights (Analytics)
-| Analytics Overview 1 | Analytics Overview 2 | Analytics Overview 3 |
-| :---: | :---: | :---: |
-| ![Insights 1](./screenshots/Insights1.png) | ![Insights 2](./screenshots/Insights2.png) | ![Insights 3](./screenshots/Insights3.png) |
+| Analytics Overview |
+| :---: |
+| ![Insights 1](./screenshots/Insights1.png) |
+| ![Insights 2](./screenshots/Insights2.png) |
+| ![Insights 3](./screenshots/Insights3.png) |
 
 ### 🛣️ AI Prediction Results
 | Prediction Insight |
