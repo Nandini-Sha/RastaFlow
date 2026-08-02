@@ -191,7 +191,48 @@ export default function IncidentManagement() {
                   onClick={() => handleIncidentClick(incident)}
                   className={`group p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 relative ${isOfficial ? 'hover:shadow-md hover:border-yellow-300 dark:hover:border-yellow-600/50 cursor-pointer' : ''}`}
                 >
-                  <div className="flex justify-between items-start mb-3">
+                  {/* Mobile Header */}
+                  <div className="flex md:hidden flex-col gap-2 mb-3">
+                    <div className="flex justify-between items-center">
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${getSeverityColor(incident.severity)}`}>
+                        {incident.severity.toUpperCase()}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {incident.image_url && !isOfficial && (
+                          <span className="flex items-center gap-1 text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded-md border border-blue-200 dark:border-blue-800">
+                            Photo
+                          </span>
+                        )}
+                        {isOfficial && (
+                          <div className="flex gap-1">
+                            <button 
+                              onClick={(e) => handleResolve(e, incident.id)}
+                              className="p-1.5 text-gray-500 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-md transition-colors bg-gray-100 dark:bg-gray-700"
+                              title="Mark as Resolved"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={(e) => handleDelete(e, incident.id)}
+                              className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors bg-gray-100 dark:bg-gray-700"
+                              title="Delete Incident"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-mono font-semibold text-gray-500 dark:text-gray-400">{incident.incident_id || incident.id}</span>
+                      <div className="flex items-center text-gray-500 dark:text-gray-400">
+                        <Clock className="w-4 h-4 mr-1" /> {incident.time}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop Header */}
+                  <div className="hidden md:flex justify-between items-start mb-3">
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-sm font-semibold text-gray-500 dark:text-gray-400">{incident.incident_id || incident.id}</span>
                       <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${getSeverityColor(incident.severity)}`}>
@@ -290,7 +331,32 @@ export default function IncidentManagement() {
                   key={incident.id}
                   className="group p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-300 relative"
                 >
-                  <div className="flex justify-between items-start mb-2">
+                  {/* Mobile Header */}
+                  <div className="flex md:hidden flex-col gap-2 mb-2">
+                    <div className="flex justify-between items-center">
+                      <span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${getSeverityColor(incident.severity)} opacity-80`}>
+                        {incident.severity.toUpperCase()}
+                      </span>
+                      {isOfficial && (
+                        <button 
+                          onClick={(e) => handleDelete(e, incident.id)}
+                          className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors bg-gray-100 dark:bg-gray-700"
+                          title="Delete Incident"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="font-mono font-semibold text-gray-500 dark:text-gray-400">{incident.incident_id || incident.id}</span>
+                      <div className="flex items-center text-gray-500 dark:text-gray-400">
+                        <Clock className="w-4 h-4 mr-1" /> {incident.time}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop Header */}
+                  <div className="hidden md:flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-sm font-semibold text-gray-500 dark:text-gray-400">{incident.incident_id || incident.id}</span>
                       <span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${getSeverityColor(incident.severity)} opacity-80`}>
