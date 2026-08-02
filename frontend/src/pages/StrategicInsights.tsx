@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { 
@@ -10,60 +10,11 @@ import {
   BarChart, Bar, Legend, PieChart, Pie, Cell
 } from "recharts";
 
-// --- MOCK AGGREGATE DATA FOR CHARTS ---
-const mockTimeSeries24h = [
-  { time: "00:00", incidents: 12, resolved: 10 },
-  { time: "04:00", incidents: 8, resolved: 15 },
-  { time: "08:00", incidents: 45, resolved: 20 },
-  { time: "12:00", incidents: 30, resolved: 40 },
-  { time: "16:00", incidents: 55, resolved: 35 },
-  { time: "20:00", incidents: 25, resolved: 45 },
-  { time: "24:00", incidents: 15, resolved: 20 },
-];
-
-const mockTimeSeries7d = [
-  { time: "Mon", incidents: 120, resolved: 110 },
-  { time: "Tue", incidents: 85, resolved: 90 },
-  { time: "Wed", incidents: 145, resolved: 120 },
-  { time: "Thu", incidents: 130, resolved: 140 },
-  { time: "Fri", incidents: 155, resolved: 135 },
-  { time: "Sat", incidents: 250, resolved: 245 },
-  { time: "Sun", incidents: 215, resolved: 220 },
-];
-
-const mockTimeSeries30d = [
-  { time: "1-5", incidents: 520, resolved: 510 },
-  { time: "6-10", incidents: 485, resolved: 490 },
-  { time: "11-15", incidents: 645, resolved: 620 },
-  { time: "16-20", incidents: 530, resolved: 540 },
-  { time: "21-25", incidents: 655, resolved: 635 },
-  { time: "26-30", incidents: 750, resolved: 745 },
-];
-
-const mockTypeData24h = [
-  { name: "Breakdown", count: 120 },
-  { name: "Accident", count: 85 },
-  { name: "Water Logging", count: 40 },
-  { name: "Pothole", count: 65 },
-  { name: "Tree Fall", count: 15 },
-];
-
-const initialSeverityData = [
-  { name: "Low", value: 150, color: "#10B981" },     // Emerald 500
-  { name: "Medium", value: 95, color: "#F59E0B" },  // Amber 500
-  { name: "High", value: 50, color: "#EF4444" },    // Red 500
-  { name: "Critical", value: 12, color: "#7F1D1D" } // Red 900
-];
-
 export default function StrategicInsights() {
   const navigate = useNavigate();
   
   // Data State
   const [liveIncidents, setLiveIncidents] = useState<any[]>([]);
-  const [timeSeriesData, setTimeSeriesData] = useState([...mockTimeSeries24h]);
-  const [typeData, setTypeData] = useState([...mockTypeData24h]);
-  const [severityData, setSeverityData] = useState([...initialSeverityData]);
-  const [totalReports, setTotalReports] = useState(3240);
 
   // Filter State
   const [timeFilter, setTimeFilter] = useState("24h");
@@ -84,66 +35,102 @@ export default function StrategicInsights() {
       }
     };
     fetchIncidents();
-  }, []);
-
-  // Live Simulation Engine
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Simulate live incoming reports
-      setTotalReports(prev => prev + (Math.random() > 0.7 ? 1 : 0));
-      
-      // Slightly mutate the last data point in the area chart to make it "breathe"
-      setTimeSeriesData(prev => {
-        const newData = [...prev];
-        const lastIndex = newData.length - 1;
-        const change = Math.floor(Math.random() * 5) - 2; // -2 to +2
-        
-        newData[lastIndex] = {
-          ...newData[lastIndex],
-          incidents: Math.max(0, newData[lastIndex].incidents + change)
-        };
-        return newData;
-      });
-    }, 4000);
-
+    // Poll every 10 seconds to keep live data fresh
+    const interval = setInterval(fetchIncidents, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Handle Filters
-  useEffect(() => {
-    // When filters change, we randomize the data heavily to simulate different datasets
-    const multiplier = timeFilter === "7d" ? 7 : timeFilter === "30d" ? 30 : 1;
-    const corridorFactor = corridorFilter === "All" ? 1 : 0.3; // Specific corridors have less volume
+  // Filter Live Data based on selections
+  const filteredIncidents = useMemo(() => {
+    return liveIncidents.filter(inc => {
+      // Apply Corridor Filter
+      if (corridorFilter !== "All" && !inc.location.includes(corridorFilter)) {
+        return false;
+      }
+      // Apply Time Filter
+      if (inc.created_at) {
+        const createdDate = new Date(inc.created_at);
+        const now = new Date();
+        const diffHours = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60);
+        
+        if (timeFilter === "24h" && diffHours > 24) return false;
+        if (timeFilter === "7d" && diffHours > 24 * 7) return false;
+        if (timeFilter === "30d" && diffHours > 24 * 30) return false;
+      }
+      return true;
+    });
+  }, [liveIncidents, timeFilter, corridorFilter]);
+
+  // Total Reports KPI
+  const totalReports = filteredIncidents.length;
+
+  // Aggregate Severity Donut Chart Data
+  const severityData = useMemo(() => {
+    const counts = { Low: 0, Medium: 0, High: 0, Critical: 0 };
+    filteredIncidents.forEach(inc => {
+      const s = inc.severity.charAt(0).toUpperCase() + inc.severity.slice(1).toLowerCase();
+      if (counts[s as keyof typeof counts] !== undefined) {
+        counts[s as keyof typeof counts]++;
+      }
+    });
+    return [
+      { name: "Low", value: counts.Low, color: "#10B981" },
+      { name: "Medium", value: counts.Medium, color: "#F59E0B" },
+      { name: "High", value: counts.High, color: "#EF4444" },
+      { name: "Critical", value: counts.Critical, color: "#7F1D1D" }
+    ].filter(item => item.value > 0); // Only show segments with data
+  }, [filteredIncidents]);
+
+  // Aggregate Types Bar Chart Data
+  const typeData = useMemo(() => {
+    const typeMap = new Map<string, number>();
+    filteredIncidents.forEach(inc => {
+      const t = inc.type || "Unknown";
+      typeMap.set(t, (typeMap.get(t) || 0) + 1);
+    });
+    const result = Array.from(typeMap.entries()).map(([name, count]) => ({ name, count }));
+    result.sort((a, b) => b.count - a.count); // Sort descending
+    return result.slice(0, 5); // Top 5 types
+  }, [filteredIncidents]);
+
+  // Aggregate Time Series Area Chart Data
+  const timeSeriesData = useMemo(() => {
+    const dataMap = new Map<string, { incidents: number, resolved: number }>();
     
-    const factor = multiplier * corridorFactor;
-    
-    let baseTimeData = mockTimeSeries24h;
-    if (timeFilter === "7d") baseTimeData = mockTimeSeries7d;
-    if (timeFilter === "30d") baseTimeData = mockTimeSeries30d;
+    // Determine grouping based on filter
+    filteredIncidents.forEach(inc => {
+      if (!inc.created_at) return;
+      const date = new Date(inc.created_at);
+      let key = "";
+      
+      if (timeFilter === "24h") {
+        // Group by hour
+        key = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(':')[0] + ":00";
+      } else {
+        // Group by Day (e.g. "Mon", "Tue" for 7d, or MM/DD for 30d)
+        if (timeFilter === "7d") {
+          key = date.toLocaleDateString('en-US', { weekday: 'short' });
+        } else {
+          key = date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' });
+        }
+      }
 
-    setTimeSeriesData(baseTimeData.map(d => ({
-      ...d,
-      incidents: Math.floor(d.incidents * corridorFactor * (0.8 + Math.random() * 0.4)),
-      resolved: Math.floor(d.resolved * corridorFactor * (0.8 + Math.random() * 0.4))
-    })));
+      const existing = dataMap.get(key) || { incidents: 0, resolved: 0 };
+      existing.incidents++;
+      if (inc.status === "Resolved") existing.resolved++;
+      dataMap.set(key, existing);
+    });
 
-    setTypeData(mockTypeData24h.map(d => ({
-      ...d,
-      count: Math.floor(d.count * factor * (0.8 + Math.random() * 0.4))
-    })));
+    // Convert map to array and sort (very simplistic sort for demonstration, in a real app would sort by actual timestamp)
+    return Array.from(dataMap.entries()).map(([time, counts]) => ({
+      time,
+      incidents: counts.incidents,
+      resolved: counts.resolved
+    })).reverse(); // Reverse to roughly match chronological if pulling from DB order
+  }, [filteredIncidents, timeFilter]);
 
-    setSeverityData(initialSeverityData.map(d => ({
-      ...d,
-      value: Math.floor(d.value * factor * (0.8 + Math.random() * 0.4))
-    })));
-    
-    setTotalReports(Math.floor(3240 * factor));
-  }, [timeFilter, corridorFilter]);
-
-
-  const activeCount = liveIncidents.filter(inc => inc.status === "Active").length;
-  const criticalCount = liveIncidents.filter(inc => inc.severity.toLowerCase() === "critical" && inc.status === "Active").length;
-  
+  const activeCount = filteredIncidents.filter(inc => inc.status === "Active").length;
+  const criticalCount = filteredIncidents.filter(inc => inc.severity.toLowerCase() === "critical" && inc.status === "Active").length;
   const totalSeverity = severityData.reduce((acc, curr) => acc + curr.value, 0);
 
   const handleNavigateToCommand = (filterVal: string) => {
@@ -186,7 +173,7 @@ export default function StrategicInsights() {
             Strategic Insights
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2 text-lg">
-            City-wide traffic analytics, historical trends, and live operational metrics.
+            City-wide traffic analytics powered by real-time aggregated data.
           </p>
         </div>
 
@@ -227,7 +214,7 @@ export default function StrategicInsights() {
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-500/10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
           <div className="flex justify-between items-start relative z-10">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 group-hover:text-blue-500 transition-colors">Live Active Incidents</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 group-hover:text-blue-500 transition-colors">Filtered Active</p>
               <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{activeCount}</h3>
             </div>
             <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl">
@@ -236,7 +223,7 @@ export default function StrategicInsights() {
           </div>
           <div className="mt-4 flex items-center text-sm text-green-600 dark:text-green-400 font-medium">
             <TrendingDown className="w-4 h-4 mr-1" />
-            <span>12% from yesterday</span>
+            <span>Real-time tracking</span>
           </div>
         </div>
 
@@ -248,7 +235,7 @@ export default function StrategicInsights() {
           <div className="absolute -right-6 -top-6 w-24 h-24 bg-red-500/10 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
           <div className="flex justify-between items-start relative z-10">
             <div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 group-hover:text-red-500 transition-colors">Live Critical Alerts</p>
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400 group-hover:text-red-500 transition-colors">Filtered Critical</p>
               <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{criticalCount}</h3>
             </div>
             <div className="p-3 bg-red-50 dark:bg-red-900/30 rounded-xl">
@@ -267,15 +254,14 @@ export default function StrategicInsights() {
           <div className="flex justify-between items-start relative z-10">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Clearance Time</p>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">42m</h3>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">N/A</h3>
             </div>
             <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl">
               <Clock className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
           </div>
-          <div className="mt-4 flex items-center text-sm text-green-600 dark:text-green-400 font-medium">
-            <TrendingDown className="w-4 h-4 mr-1" />
-            <span>5 mins faster than avg</span>
+          <div className="mt-4 flex items-center text-sm text-gray-500 dark:text-gray-400 font-medium">
+            <span>Pending history data</span>
           </div>
         </div>
 
@@ -285,7 +271,7 @@ export default function StrategicInsights() {
           <div className="flex justify-between items-start relative z-10">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Reports This Period</p>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1 animate-pulse">{totalReports.toLocaleString()}</h3>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{totalReports.toLocaleString()}</h3>
             </div>
             <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl">
               <BarChart3 className="w-6 h-6 text-purple-600 dark:text-purple-400" />
@@ -304,27 +290,34 @@ export default function StrategicInsights() {
         <div className="lg:col-span-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Incident Volume Over Time ({timeFilter})</h2>
           <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorIncidents" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
-                <XAxis dataKey="time" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
-                <RechartsTooltip content={<CustomTooltip />} />
-                <Legend verticalAlign="top" height={36} iconType="circle" />
-                <Area type="monotone" name="Reported" dataKey="incidents" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorIncidents)" animationDuration={1000} />
-                <Area type="monotone" name="Resolved" dataKey="resolved" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorResolved)" animationDuration={1000} />
-              </AreaChart>
-            </ResponsiveContainer>
+            {timeSeriesData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={timeSeriesData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorIncidents" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#374151" opacity={0.2} />
+                  <XAxis dataKey="time" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
+                  <RechartsTooltip content={<CustomTooltip />} />
+                  <Legend verticalAlign="top" height={36} iconType="circle" />
+                  <Area type="monotone" name="Reported" dataKey="incidents" stroke="#3B82F6" strokeWidth={3} fillOpacity={1} fill="url(#colorIncidents)" animationDuration={1000} />
+                  <Area type="monotone" name="Resolved" dataKey="resolved" stroke="#10B981" strokeWidth={3} fillOpacity={1} fill="url(#colorResolved)" animationDuration={1000} />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                <Activity className="w-12 h-12 mb-2 opacity-20" />
+                <p>No incidents recorded in this timeframe.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -332,77 +325,95 @@ export default function StrategicInsights() {
         <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Incidents by Severity</h2>
           <div className="h-64 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={severityData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={90}
-                  paddingAngle={5}
-                  dataKey="value"
-                  stroke="none"
-                  onClick={(data) => handleChartClick(data, "Severity")}
-                  className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
-                  animationDuration={800}
-                >
-                  {severityData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <RechartsTooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-            {/* Center Text */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">{totalSeverity}</span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Total</span>
-            </div>
+            {severityData.length > 0 ? (
+              <>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={severityData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                      onClick={(data) => handleChartClick(data, "Severity")}
+                      className="cursor-pointer hover:opacity-80 transition-opacity focus:outline-none"
+                      animationDuration={800}
+                    >
+                      {severityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Center Text */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-3xl font-bold text-gray-900 dark:text-white">{totalSeverity}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Total</span>
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                <AlertTriangle className="w-12 h-12 mb-2 opacity-20" />
+                <p>No data</p>
+              </div>
+            )}
           </div>
           
           {/* Custom Legend */}
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {severityData.map((item) => (
-              <div 
-                key={item.name} 
-                className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded transition-colors"
-                onClick={() => setSelectedCategory({ type: "Severity", name: item.name })}
-              >
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                <span className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">{item.name}</span>
-              </div>
-            ))}
-          </div>
+          {severityData.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {severityData.map((item) => (
+                <div 
+                  key={item.name} 
+                  className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 p-1 rounded transition-colors"
+                  onClick={() => setSelectedCategory({ type: "Severity", name: item.name })}
+                >
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                  <span className="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Causes Bar Chart (Takes up full width below) */}
         <div className="lg:col-span-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm transition-all">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Most Common Incident Types</h2>
           <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={typeData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }} layout="vertical" onClick={(data: any) => {
-                if (data && data.activePayload && data.activePayload.length > 0) {
-                  handleChartClick(data.activePayload[0].payload, "Type");
-                }
-              }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#374151" opacity={0.2} />
-                <XAxis type="number" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis dataKey="name" type="category" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} width={100} />
-                <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: '#374151', opacity: 0.1 }} />
-                <Bar 
-                  dataKey="count" 
-                  name="Incidents" 
-                  radius={[0, 4, 4, 0]} 
-                  className="cursor-pointer hover:opacity-80 transition-opacity"
-                  animationDuration={800}
-                >
-                  {typeData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#8B5CF6' : '#A78BFA'} /> 
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {typeData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={typeData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }} layout="vertical" onClick={(data: any) => {
+                  if (data && data.activePayload && data.activePayload.length > 0) {
+                    handleChartClick(data.activePayload[0].payload, "Type");
+                  }
+                }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#374151" opacity={0.2} />
+                  <XAxis type="number" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis dataKey="name" type="category" stroke="#6B7280" fontSize={12} tickLine={false} axisLine={false} width={100} />
+                  <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: '#374151', opacity: 0.1 }} />
+                  <Bar 
+                    dataKey="count" 
+                    name="Incidents" 
+                    radius={[0, 4, 4, 0]} 
+                    className="cursor-pointer hover:opacity-80 transition-opacity"
+                    animationDuration={800}
+                  >
+                    {typeData.map((_, index) => (
+                      <Cell key={`cell-${index}`} fill={index % 2 === 0 ? '#8B5CF6' : '#A78BFA'} /> 
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                <BarChart3 className="w-12 h-12 mb-2 opacity-20" />
+                <p>No data</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -425,15 +436,15 @@ export default function StrategicInsights() {
             </div>
             
             <div className="p-6 max-h-[60vh] overflow-y-auto">
-              {/* Show matching live incidents if available, else mock data */}
-              {liveIncidents.filter(inc => 
+              {/* Show matching live incidents */}
+              {filteredIncidents.filter(inc => 
                 (selectedCategory.type === "Severity" && inc.severity.toLowerCase() === selectedCategory.name.toLowerCase()) ||
-                (selectedCategory.type === "Type" && inc.type.toLowerCase().includes(selectedCategory.name.toLowerCase()))
+                (selectedCategory.type === "Type" && (inc.type || "").toLowerCase().includes(selectedCategory.name.toLowerCase()))
               ).length > 0 ? (
                 <div className="space-y-4">
-                  {liveIncidents.filter(inc => 
+                  {filteredIncidents.filter(inc => 
                     (selectedCategory.type === "Severity" && inc.severity.toLowerCase() === selectedCategory.name.toLowerCase()) ||
-                    (selectedCategory.type === "Type" && inc.type.toLowerCase().includes(selectedCategory.name.toLowerCase()))
+                    (selectedCategory.type === "Type" && (inc.type || "").toLowerCase().includes(selectedCategory.name.toLowerCase()))
                   ).map((inc, i) => (
                     <div key={i} className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 hover:border-blue-500/50 transition-colors">
                       <div>
@@ -446,7 +457,9 @@ export default function StrategicInsights() {
                         }`}>
                           {inc.status}
                         </span>
-                        <p className="text-xs text-gray-400 mt-1">{new Date(inc.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {inc.created_at ? new Date(inc.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : inc.time}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -454,8 +467,7 @@ export default function StrategicInsights() {
               ) : (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-300 dark:border-gray-700">
                   <Activity className="w-12 h-12 mx-auto mb-3 opacity-20" />
-                  <p>No live active incidents match this criteria right now.</p>
-                  <p className="text-sm mt-1">This category represents historical aggregated data in the current filter.</p>
+                  <p>No incidents match this criteria right now.</p>
                 </div>
               )}
             </div>
