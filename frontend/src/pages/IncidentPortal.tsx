@@ -14,6 +14,7 @@ export default function IncidentPortal() {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -33,11 +34,71 @@ export default function IncidentPortal() {
     "Tumkur Road", "Varthur Road", "West of Chord Road", "Other"
   ];
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new globalThis.Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1280;
+          const MAX_HEIGHT = 1280;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height = Math.round((height *= MAX_WIDTH / width));
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width = Math.round((width *= MAX_HEIGHT / height));
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file); // fallback to original if canvas fails
+            }
+          }, "image/jpeg", 0.7); // 70% quality JPEG
+        };
+        img.onerror = () => resolve(file); // fallback to original on error
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      const originalFile = e.target.files[0];
+      
+      setIsCompressing(true);
+      try {
+        const compressedFile = await compressImage(originalFile);
+        setImage(compressedFile);
+        setPreviewUrl(URL.createObjectURL(compressedFile));
+      } catch (err) {
+        // Fallback to original
+        setImage(originalFile);
+        setPreviewUrl(URL.createObjectURL(originalFile));
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -241,11 +302,11 @@ export default function IncidentPortal() {
                   <div className="absolute inset-0 w-full h-full">
                     <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col gap-2 items-center justify-center backdrop-blur-sm">
-                      <button type="button" onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }} className="px-4 py-2 bg-white/20 hover:bg-white/40 text-white rounded-lg flex items-center gap-2 transition-colors">
-                        <Camera className="w-4 h-4" /> Retake Photo
+                      <button type="button" onClick={(e) => { e.stopPropagation(); cameraInputRef.current?.click(); }} disabled={isCompressing} className="px-4 py-2 bg-white/20 hover:bg-white/40 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50">
+                        <Camera className="w-4 h-4" /> {isCompressing ? 'Compressing...' : 'Retake Photo'}
                       </button>
-                      <button type="button" onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }} className="px-4 py-2 bg-white/20 hover:bg-white/40 text-white rounded-lg flex items-center gap-2 transition-colors">
-                        <ImageIcon className="w-4 h-4" /> Pick New
+                      <button type="button" onClick={(e) => { e.stopPropagation(); galleryInputRef.current?.click(); }} disabled={isCompressing} className="px-4 py-2 bg-white/20 hover:bg-white/40 text-white rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50">
+                        <ImageIcon className="w-4 h-4" /> {isCompressing ? 'Compressing...' : 'Pick New'}
                       </button>
                     </div>
                     <button
@@ -263,7 +324,8 @@ export default function IncidentPortal() {
                       <button 
                         type="button" 
                         onClick={() => cameraInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-500 transition-colors w-28"
+                        disabled={isCompressing}
+                        className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-500 transition-colors w-28 disabled:opacity-50"
                       >
                         <Camera className="w-8 h-8" />
                         <span className="text-sm font-medium">Camera</span>
@@ -272,12 +334,18 @@ export default function IncidentPortal() {
                       <button 
                         type="button" 
                         onClick={() => galleryInputRef.current?.click()}
-                        className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-500 transition-colors w-28"
+                        disabled={isCompressing}
+                        className="flex flex-col items-center justify-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 p-4 rounded-xl shadow-sm hover:border-blue-500 hover:text-blue-500 transition-colors w-28 disabled:opacity-50"
                       >
                         <ImageIcon className="w-8 h-8" />
                         <span className="text-sm font-medium">Gallery</span>
                       </button>
                     </div>
+                    {isCompressing && (
+                      <div className="text-blue-500 text-sm font-bold animate-pulse mt-2">
+                        Optimizing image...
+                      </div>
+                    )}
                     <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-2 font-medium bg-yellow-50 dark:bg-yellow-900/20 py-1 px-2 rounded-md inline-block">
                       Note: Please upload a landscape image or tilt your camera to click image.
                     </p>
@@ -290,17 +358,17 @@ export default function IncidentPortal() {
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isCompressing}
               className={`w-full md:w-auto px-8 py-3.5 rounded-xl text-white font-bold shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 transition-all ${
-                isSubmitting 
+                isSubmitting || isCompressing
                   ? "bg-blue-400 cursor-not-allowed" 
                   : "bg-blue-600 hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0"
               }`}
             >
-              {isSubmitting ? (
+              {isSubmitting || isCompressing ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Submitting...
+                  {isCompressing ? 'Compressing Image...' : 'Submitting...'}
                 </>
               ) : (
                 <>
