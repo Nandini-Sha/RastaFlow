@@ -10,6 +10,7 @@ __pycache__
 
 # env
 .env
+backend/uploads/
 
 # models
 *.joblib
