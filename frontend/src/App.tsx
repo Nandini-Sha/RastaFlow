@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import IncidentPortal from "./pages/IncidentPortal";
 import IncidentManagement from "./pages/IncidentManagement";
 import StrategicInsights from "./pages/StrategicInsights";
+import InstallPWA from "./components/InstallPWA";
 import OfficialLogin from "./components/OfficialLogin";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -55,6 +56,9 @@ export default function App() {
               </Routes>
             </main>
           </div>
+          
+          {/* PWA Install Banner */}
+          <InstallPWA />
         </div>
       </Router>
     </ThemeProvider>
