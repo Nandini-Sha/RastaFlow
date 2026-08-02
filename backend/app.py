@@ -99,9 +99,13 @@ async def delete_incident(id: str):
 
 @app.patch("/incidents/{id}/resolve")
 async def resolve_incident(id: str):
+    from datetime import datetime
     result = await incident_collection.update_one(
         {"_id": ObjectId(id)},
-        {"$set": {"status": "Resolved"}}
+        {"$set": {
+            "status": "Resolved", 
+            "resolved_at": datetime.utcnow().isoformat()
+        }}
     )
     if result.modified_count == 1:
         return {"message": "Incident marked as Resolved"}

@@ -133,6 +133,30 @@ export default function StrategicInsights() {
   const criticalCount = filteredIncidents.filter(inc => inc.severity.toLowerCase() === "critical" && inc.status === "Active").length;
   const totalSeverity = severityData.reduce((acc, curr) => acc + curr.value, 0);
 
+  const avgClearanceTime = useMemo(() => {
+    let totalDiffMs = 0;
+    let count = 0;
+    filteredIncidents.forEach(inc => {
+      if (inc.status === "Resolved" && inc.created_at && inc.resolved_at) {
+        const start = new Date(inc.created_at).getTime();
+        const end = new Date(inc.resolved_at).getTime();
+        if (end > start) {
+          totalDiffMs += (end - start);
+          count++;
+        }
+      }
+    });
+
+    if (count === 0) return "N/A";
+    const avgMs = totalDiffMs / count;
+    const avgMins = Math.round(avgMs / 60000);
+    
+    if (avgMins < 60) return `${avgMins}m`;
+    const avgHrs = Math.floor(avgMins / 60);
+    const remMins = avgMins % 60;
+    return `${avgHrs}h ${remMins}m`;
+  }, [filteredIncidents]);
+
   const handleNavigateToCommand = (filterVal: string) => {
     navigate("/", { state: { severityFilter: filterVal } });
   };
@@ -254,14 +278,14 @@ export default function StrategicInsights() {
           <div className="flex justify-between items-start relative z-10">
             <div>
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Clearance Time</p>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">N/A</h3>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">{avgClearanceTime}</h3>
             </div>
             <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl">
               <Clock className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
           </div>
           <div className="mt-4 flex items-center text-sm text-gray-500 dark:text-gray-400 font-medium">
-            <span>Pending history data</span>
+            <span>Based on resolved incidents</span>
           </div>
         </div>
 

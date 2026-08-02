@@ -23,4 +23,5 @@ def incident_helper(incident) -> dict:
         "status": incident.get("status", "Active"),
         "image_url": incident.get("image_url", None),
         "created_at": incident["_id"].generation_time.isoformat(),
+        "resolved_at": incident.get("resolved_at", None),
     }
