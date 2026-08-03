@@ -121,27 +121,42 @@ async def report_incident(
 ):
     image_url = None
     if image:
-        # Upload image to ImgBB
+        image_data = await image.read()
+        
+        # Try ImgBB first
         imgbb_api_key = os.getenv("IMGBB_API_KEY")
         if imgbb_api_key:
-            image_data = await image.read()
-            encoded_image = base64.b64encode(image_data).decode('utf-8')
-            
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    "https://api.imgbb.com/1/upload",
-                    data={
-                        "key": imgbb_api_key,
-                        "image": encoded_image
-                    },
-                    timeout=15.0
-                )
-                if response.status_code == 200:
-                    image_url = response.json()["data"]["url"]
-                else:
-                    logging.error(f"ImgBB upload failed: {response.text}")
+            try:
+                encoded_image = base64.b64encode(image_data).decode('utf-8')
+                async with httpx.AsyncClient() as client:
+                    response = await client.post(
+                        "https://api.imgbb.com/1/upload",
+                        data={
+                            "key": imgbb_api_key,
+                            "image": encoded_image
+                        },
+                        timeout=15.0
+                    )
+                    if response.status_code == 200:
+                        image_url = response.json()["data"]["url"]
+                    else:
+                        logging.error(f"ImgBB upload failed: {response.text}")
+            except Exception as e:
+                logging.error(f"ImgBB request exception: {e}")
         else:
             logging.error("IMGBB_API_KEY is not set in environment variables.")
+
+        # Fallback to local storage
+        if not image_url:
+            file_extension = image.filename.split(".")[-1] if (image.filename and "." in image.filename) else "jpg"
+            file_name = f"{uuid.uuid4().hex}.{file_extension}"
+            file_path = os.path.join("uploads", file_name)
+            with open(file_path, "wb") as f:
+                f.write(image_data)
+            
+            # Use request.base_url to form the absolute URL
+            base_url = str(request.base_url).rstrip("/")
+            image_url = f"{base_url}/uploads/{file_name}"
 
     severity = "Medium" # Default fallback
     try:
